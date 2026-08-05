@@ -62,6 +62,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     utm_campaign: sanitizeOptionalString(record.utm_campaign),
     utm_content: sanitizeOptionalString(record.utm_content),
     utm_term: sanitizeOptionalString(record.utm_term),
+    utm_id: sanitizeOptionalString(record.utm_id),
   };
 
   // IP sempre do SERVIDOR (cabeçalho da requisição), nunca de um campo que o
@@ -91,6 +92,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         p_landing_url: sanitized.landing_url,
         p_user_agent: sanitized.user_agent,
         p_client_ip: clientIp,
+        p_utm_id: sanitized.utm_id,
       },
     );
 

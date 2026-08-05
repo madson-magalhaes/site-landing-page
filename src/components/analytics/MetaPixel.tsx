@@ -92,6 +92,7 @@ export function MetaPixel() {
       utm_campaign: params.get("utm_campaign"),
       utm_content: params.get("utm_content"),
       utm_term: params.get("utm_term"),
+      utm_id: params.get("utm_id"),
     });
   }, []);
 
