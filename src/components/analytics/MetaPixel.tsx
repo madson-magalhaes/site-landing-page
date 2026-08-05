@@ -30,6 +30,22 @@ function readCookie(name: string): string | null {
   return value ? decodeURIComponent(value) : null;
 }
 
+/**
+ * O <Script afterInteractive> que carrega fbevents.js (e cria o cookie _fbc
+ * a partir do fbclid da URL) roda de forma assíncrona, sem sincronia com
+ * este useEffect — na prática o cookie muitas vezes ainda não existe quando
+ * lemos, mesmo com fbclid presente na URL (confirmado em teste real: clique
+ * de anúncio real gerou fbclid mas fbc chegou NULL no banco). Constrói o
+ * mesmo formato que o Pixel usaria (fb.1.<epoch_ms>.<fbclid>, documentado
+ * pela Meta) como fallback — nunca perde o dado por timing de script externo.
+ */
+function resolveFbc(fbclid: string | null): string | null {
+  const existing = readCookie("_fbc");
+  if (existing) return existing;
+  if (!fbclid) return null;
+  return `fb.1.${Date.now()}.${fbclid}`;
+}
+
 /** É aqui que a linha em core.cliques_landing NASCE — ver /api/pageview. */
 async function registrarPageview(payload: PageviewPayload): Promise<void> {
   try {
@@ -61,15 +77,16 @@ export function MetaPixel() {
     const refId = getOrCreateRefId();
     const eventId = buildEventId(refId, "pageview");
     const params = new URLSearchParams(window.location.search);
+    const fbclid = params.get("fbclid");
 
     trackPageView(eventId);
     void registrarPageview({
       ref_id: refId,
       landing_url: window.location.href,
       user_agent: navigator.userAgent,
-      fbc: readCookie("_fbc"),
+      fbc: resolveFbc(fbclid),
       fbp: readCookie("_fbp"),
-      fbclid: params.get("fbclid"),
+      fbclid,
       utm_source: params.get("utm_source"),
       utm_medium: params.get("utm_medium"),
       utm_campaign: params.get("utm_campaign"),
