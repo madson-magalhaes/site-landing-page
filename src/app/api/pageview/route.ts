@@ -64,6 +64,15 @@ export async function POST(request: Request): Promise<NextResponse> {
     utm_term: sanitizeOptionalString(record.utm_term),
   };
 
+  // IP sempre do SERVIDOR (cabeçalho da requisição), nunca de um campo que o
+  // client poderia forjar. Melhora Match Quality da CAPI quando o despachante
+  // server-side existir — Meta recomenda client_ip_address + client_user_agent
+  // como identificadores mínimos além de fbc/fbp.
+  const clientIp =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    request.headers.get("x-real-ip") ??
+    null;
+
   try {
     const supabase = getSupabaseAdmin();
     const { error } = await supabase.schema("core").rpc(
@@ -81,6 +90,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         p_utm_term: sanitized.utm_term,
         p_landing_url: sanitized.landing_url,
         p_user_agent: sanitized.user_agent,
+        p_client_ip: clientIp,
       },
     );
 
