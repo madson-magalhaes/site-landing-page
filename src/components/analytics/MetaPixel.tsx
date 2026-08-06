@@ -4,8 +4,6 @@ import Script from "next/script";
 import { useEffect, useRef } from "react";
 import { config, isPixelConfigured } from "@/lib/config";
 import { generateRefId } from "@/lib/tracking/refId";
-import { buildEventId } from "@/lib/tracking/eventId";
-import { trackPageView } from "@/lib/tracking/pixel";
 import type { PageviewPayload } from "@/types/tracking";
 
 const REF_ID_STORAGE_KEY = "lp_ref_id";
@@ -75,11 +73,9 @@ export function MetaPixel() {
     firedRef.current = true;
 
     const refId = getOrCreateRefId();
-    const eventId = buildEventId(refId, "pageview");
     const params = new URLSearchParams(window.location.search);
     const fbclid = params.get("fbclid");
 
-    trackPageView(eventId);
     void registrarPageview({
       ref_id: refId,
       landing_url: window.location.href,
@@ -111,6 +107,7 @@ export function MetaPixel() {
           s.parentNode.insertBefore(t,s)}(window, document,'script',
           'https://connect.facebook.net/en_US/fbevents.js');
           fbq('init', '${config.metaPixelId}');
+          fbq('track', 'PageView');
         `}
       </Script>
       <noscript>
